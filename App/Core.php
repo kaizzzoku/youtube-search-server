@@ -29,7 +29,7 @@ class Core
         if (array_key_exists($this->url, $this->routes) && is_subclass_of($this->routes[$this->url], self::HANDLER)) {
             $handler = new $this->routes[$this->url]($this);
             $response = $handler->handle();
-            echo $response;
+            echo json_encode($response);
 
         } else {
             http_response_code(404);

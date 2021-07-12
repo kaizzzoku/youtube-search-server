@@ -6,20 +6,46 @@ namespace App\Services;
 
 class ApiService
 {
-    private const LIST_URL = 'https://www.googleapis.com/youtube/v3/search';
+    private const SEARCH_URL = 'https://www.googleapis.com/youtube/v3/search';
+    private const VIDEOS_URL = 'https://www.googleapis.com/youtube/v3/videos';
 
-    public function getList(string $q, string $key, int $count, string $order)
+    public function getNewVideos(string $q, string $key, int $count, string $order)
     {
         $query = http_build_query([
             'key' => $key,
             'maxResults' => $count,
             'order' => $order,
-            'part' => 'snippet',
             'q' => $q,
+            'type' => 'video',
         ]);
 
-        $response = $this->makeRequest(self::LIST_URL.'?'.$query);
+        $response = $this->makeRequest(self::SEARCH_URL.'?'.$query);
+
         return $response;
+    }
+
+    public function getVideosByIds(string $key, array $ids)
+    {
+        $query = http_build_query([
+            'key' => $key,
+            'part' => 'snippet,contentDetails,statistics',
+            'id' => implode(',', $ids),
+        ]);
+
+        $response = $this->makeRequest(self::VIDEOS_URL.'?'.$query);
+
+        return $response;
+    }
+
+    public function sortVideosByViewCount(array $videos)
+    {
+        if (array_key_exists('statistics', $videos[0])) {
+            usort($videos, function ($v1, $v2) {
+                return (int) ($v1['statistics']['viewCount'] <  $v2['statistics']['viewCount']);
+            });
+        }
+
+        return $videos;
     }
 
     private function makeRequest(string $url)
